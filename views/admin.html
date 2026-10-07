@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Leads | Green Life Admin</title>
+  <link rel="icon" href="/images/favicon-48.png" type="image/png">
+  <style>
+    *{box-sizing:border-box;margin:0}
+    :root{--bg:#0b0f0a;--panel:#141a12;--line:#26321f;--lime:#8be02b;--muted:#a8b5a0;--text:#f3f6ef}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+    .brand img{width:34px;height:34px}
+    .actions{display:flex;gap:8px}
+    .btn{padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+    .btn.lime{background:var(--lime);color:#0b0f0a;border-color:var(--lime)}
+    main{max-width:1100px;margin:0 auto;padding:20px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:14px;text-transform:capitalize}
+    .tab.on{background:var(--lime);color:#0b0f0a;border-color:var(--lime)}
+    .tab b{opacity:.7;margin-left:4px}
+    .lead{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px;display:grid;grid-template-columns:1fr 260px;gap:16px}
+    .lead h3{font-size:17px;margin-bottom:4px}
+    .meta{color:var(--muted);font-size:13px;margin-bottom:10px}
+    .row{font-size:14px;margin:3px 0}
+    .row span{color:var(--muted)}
+    .row a{color:var(--lime)}
+    .msg{margin-top:8px;padding:10px 12px;background:#0b0f0a;border-radius:8px;font-size:14px;white-space:pre-wrap}
+    select,textarea{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:#0b0f0a;color:var(--text);font:inherit;font-size:14px}
+    textarea{min-height:76px;margin-top:8px;resize:vertical}
+    .side .btn{width:100%;margin-top:8px}
+    .del{background:transparent;border:0;color:#ff8a8a;font-size:13px;cursor:pointer;margin-top:8px}
+    .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:#22301b;color:var(--lime)}
+    .pill.new{background:var(--lime);color:#0b0f0a}
+    .empty{text-align:center;color:var(--muted);padding:60px 20px;border:1px dashed var(--line);border-radius:14px}
+    @media(max-width:720px){.lead{grid-template-columns:1fr}.actions .btn span{display:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><img src="/images/logo-round.png" alt="" style="border-radius:50%">Green Life Leads</div>
+    <div class="actions">
+      <a class="btn" href="/admin/api/leads.csv">⬇ <span>Export CSV</span></a>
+      <a class="btn" href="/" target="_blank">View site</a>
+      <form method="POST" action="/admin/logout"><button class="btn">Log out</button></form>
+    </div>
+  </header>
+  <main>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+  </main>
+  <script>
+    let current = '';
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmt = d => new Date(d.replace(' ', 'T') + 'Z').toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+
+    async function load() {
+      const r = await fetch('/admin/api/leads' + (current ? '?status=' + current : ''), {headers:{Accept:'application/json'}});
+      if (r.status === 401) return location.href = '/admin/login';
+      const { statuses, counts, leads } = await r.json();
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      document.getElementById('tabs').innerHTML =
+        `<button class="tab ${!current?'on':''}" data-s="">All<b>${total}</b></button>` +
+        statuses.map(s => `<button class="tab ${current===s?'on':''}" data-s="${s}">${s}<b>${counts[s]||0}</b></button>`).join('');
+      document.querySelectorAll('.tab').forEach(t => t.onclick = () => { current = t.dataset.s; load(); });
+
+      const list = document.getElementById('list');
+      if (!leads.length) { list.innerHTML = `<div class="empty">No leads here yet. New quote requests from the website show up instantly.</div>`; return; }
+      list.innerHTML = leads.map(l => `
+        <div class="lead" data-id="${l.id}">
+          <div>
+            <h3>${esc(l.name)} <span class="pill ${l.status==='new'?'new':''}">${esc(l.status)}</span></h3>
+            <div class="meta">#${l.id} · ${fmt(l.created_at)}${l.service ? ' · ' + esc(l.service) : ''}</div>
+            <div class="row"><span>Phone:</span> <a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></div>
+            ${l.email ? `<div class="row"><span>Email:</span> <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>` : ''}
+            ${l.address ? `<div class="row"><span>Property:</span> <a target="_blank" href="https://maps.google.com/?q=${encodeURIComponent(l.address)}">${esc(l.address)}</a></div>` : ''}
+            ${l.frequency ? `<div class="row"><span>How often:</span> ${esc(l.frequency)}</div>` : ''}
+            ${l.contact_pref ? `<div class="row"><span>Prefers:</span> ${esc(l.contact_pref)}</div>` : ''}
+            ${l.message ? `<div class="msg">${esc(l.message)}</div>` : ''}
+          </div>
+          <div class="side">
+            <select>${statuses.map(s => `<option ${s===l.status?'selected':''}>${s}</option>`).join('')}</select>
+            <textarea placeholder="Private notes (price quoted, follow-up date…)">${esc(l.notes)}</textarea>
+            <button class="btn lime save">Save</button>
+            <button class="del">Delete lead</button>
+          </div>
+        </div>`).join('');
+
+      list.querySelectorAll('.lead').forEach(card => {
+        const id = card.dataset.id;
+        card.querySelector('.save').onclick = async e => {
+          await fetch('/admin/api/leads/' + id, {method:'PATCH', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({status: card.querySelector('select').value, notes: card.querySelector('textarea').value})});
+          e.target.textContent = 'Saved ✓'; setTimeout(load, 600);
+        };
+        card.querySelector('.del').onclick = async () => {
+          if (!confirm('Delete this lead permanently?')) return;
+          await fetch('/admin/api/leads/' + id, {method:'DELETE'}); load();
+        };
+      });
+    }
+    load();
+  </script>
+</body>
+</html>
