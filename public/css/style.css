@@ -544,3 +544,25 @@ p { margin: 0 0 1em; }
 }
 /* gallery: 4 rows of the 3-col pattern */
 .gallery { grid-auto-rows: 230px; }
+
+/* v5 — real-ratio photo cards in the "Special teams" band */
+.svc-extras { grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 28px; }
+.extras-head { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px; padding: 0 0 4px; }
+.extras-head .svc-tag { margin: 0; }
+.extras-head h3 { font-size: 1.5rem; }
+.extra { flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; }
+.extra:hover { transform: translateY(-4px); }
+.x-img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border: 0; border-radius: 0; display: block; }
+.extra > div { padding: 16px 18px 18px; }
+.extra b { font-size: 1.15rem; }
+.extra p { font-size: .95rem; }
+@media (max-width: 1080px) { .svc-extras { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px) {
+  .svc-extras { grid-template-columns: 1fr; padding: 20px 16px; }
+  .extras-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .x-img { width: 100%; height: auto; aspect-ratio: 16 / 10; }
+}
+
+/* v5 — breathing room between words in the big display headings */
+h1, h2 { letter-spacing: -.01em; word-spacing: .1em; }
+.about-sticker span { letter-spacing: .1em; }
