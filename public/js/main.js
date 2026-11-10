@@ -89,3 +89,48 @@
     }
   });
 })();
+
+// "Call the play" picker — swaps the play card and pre-selects the service in the quote form
+(function () {
+  const btns = document.querySelectorAll('.play-btn');
+  if (!btns.length) return;
+  const media = document.getElementById('playMedia');
+  const img = document.getElementById('playImg');
+  const title = document.getElementById('playTitle');
+  const fix = document.getElementById('playFix');
+  const cta = document.getElementById('playCta');
+  const card = document.getElementById('playCard');
+
+  btns.forEach((b) =>
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation(); // don't jump to the form — this button only picks a play
+      btns.forEach((x) => { x.classList.remove('on'); x.setAttribute('aria-selected', 'false'); });
+      b.classList.add('on');
+      b.setAttribute('aria-selected', 'true');
+      const src = b.dataset.img;
+      if (src) {
+        img.src = '/images/' + src;
+        img.alt = b.dataset.alt || '';
+        media.classList.remove('no-photo');
+      } else {
+        media.classList.add('no-photo');
+        media.setAttribute('data-icon', b.querySelector('.play-ico').textContent);
+      }
+      title.textContent = b.dataset.service;
+      fix.textContent = b.dataset.fix;
+      cta.setAttribute('data-service', b.dataset.service);
+      card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip');
+      if (window.innerWidth <= 900) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, true)
+  );
+
+  // CTA pre-selects whichever play is showing
+  const select = document.getElementById('serviceSelect');
+  cta.addEventListener('click', () => {
+    if (!select) return;
+    const want = (cta.getAttribute('data-service') || '').toLowerCase();
+    const opt = [...select.options].find((o) => o.text.toLowerCase() === want);
+    if (opt) select.value = opt.value || opt.text;
+  });
+})();

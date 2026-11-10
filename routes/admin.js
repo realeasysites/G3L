@@ -2,7 +2,7 @@
 const path = require('path');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { checkCredentials, requireAdmin } = require('../lib/auth');
+const { checkPassword, requireAdmin } = require('../lib/auth');
 const { STATUSES, listLeads, countLeads, updateLead, deleteLead } = require('../db/database');
 
 const router = express.Router();
@@ -16,8 +16,8 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', loginLimiter, (req, res) => {
-  const { username, password } = req.body || {};
-  if (checkCredentials(username, password)) {
+  const { password } = req.body || {};
+  if (checkPassword(password)) {
     req.session.regenerate(() => {
       req.session.isAdmin = true;
       res.redirect('/admin');

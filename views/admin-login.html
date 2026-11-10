@@ -26,9 +26,9 @@
     <div class="brand"><img src="/images/logo-round.png" alt="" style="border-radius:50%">GREEN LIFE · ADMIN</div>
     <h1>Lead Dashboard</h1>
     <p>Sign in to see and manage quote requests.</p>
-    <div class="err" id="err">Wrong password.</div>
+    <div class="err" id="err">Wrong password. Try again.</div>
     <label for="p">Password</label>
-    <input id="p" name="password" type="password" autofocus autocomplete="current-password" required>
+    <input id="p" name="password" type="password" autocomplete="current-password" required autofocus>
     <button type="submit">Sign in</button>
   </form>
   <script>if(location.search.includes('error'))document.getElementById('err').style.display='block'</script>
